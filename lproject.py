@@ -10,7 +10,6 @@ def cli():
 @click.command(help="Copy a project.")
 @click.option('--id', '--project_id', help="id: ID of Project to copy.")
 @click.argument('id', required=False)
-# @click.option('--name', '--project_name', help="name: Name of Project to copy.")
 @click.option('--source', default='Source',  help="Source,  overrides value labeled in looker.ini file.")
 @click.option('--destination', default='Destination',  help="Destination tag, overrides value in looker.ini file.")
 @click.option('--github_org', default=None, help="Git Hub Organization, overrides value defined in .env file.")

@@ -9,16 +9,14 @@ def get_project_repo_url(project_id: str, sdk: any) -> str:
 
 
 def get_models(project_id: str, sdk: any):
-    # sdk = clients.get_looker_sdk() if source=='prod' else clients.get_prod_looker_sdk()
+    # TODO: Need to reserch name vs ID for projects
     models = sdk.all_lookml_models()
     # project_models = [ (m.name, m.project_name, m.explores) for m in models if m.project_name == project_name ]
-    # TODO: Need to reserch name vs ID for projects
-    project_models = [m.name for m in models if m.project_name == project_id]
-    return project_models
+    return [m.name for m in models if m.project_name == project_id]
 
 
 def copy_folder(folder_name: str, folder_id: int, source: str, destination: str):
-    # Copy folder and User Defined Dashboards
+    ### Copy folder and User Defined Dashboards
 
     if not folder_name and not folder_id:
         raise ValueError("folder_name or folder_id required")
@@ -35,12 +33,12 @@ def copy_folder(folder_name: str, folder_id: int, source: str, destination: str)
         # We may have multiple folders with the same name.
         folder_ids = [f.id for f in folders_all_source if f.name == folder_name]
 
-        if len(folder_ids) > 1:
-            print(f"More than one matching folder found with that name at {source}, please use --folder_id")
-            sys.exit(1)
-        elif len(folder_ids) == 0:
+        if not folder_ids:
             print(f"No matching folder found with that name at {source}.")
             sys.exit(1)
+        elif len(folder_ids) > 1:
+            print(f"More than one matching folder found with that name at {source}, please use --folder_id")
+            sys.exit(1)    
 
         # check destination for existing folder with same name, if name passed
         folders_all_destination = sdk_destination.all_folders()
@@ -64,7 +62,7 @@ def copy_folder(folder_name: str, folder_id: int, source: str, destination: str)
 
         # TODO: If --force, etc, get folder ID at destination and copy to it?
         folders_destination_exists = None
-        if len(folder_ids_destination) > 0:
+        if folder_ids_destination:
             print(f"Folder {folder_name} already exists at {destination}, copying into it.")
             folders_destination_exists = True
             destination_folder_id = folder_ids_destination[0]
@@ -116,18 +114,15 @@ def copy_folder(folder_name: str, folder_id: int, source: str, destination: str)
         # Reconstitute LoomML DB to UDD at destination
 
         try: 
-            
             response = sdk_destination.import_dashboard_from_lookml(
                 body=models.WriteDashboardLookml(
                     folder_id=destination_folder_id,
                     lookml=db_lookml
                 ))
-
-            # print(f"response: {response}")
             print(f"Copied Dashboard ID: {response.dashboard_id}")
         except Exception as e:
             if type(e).__name__ == "SDKError":
-                print("!!! SDK Error: make sure a copy of a dashboard is not in the trash folder at the destination.")
+                print("!!! SDK Error: make sure a copy of dashboard: is not in the trash folder at the destination.")
             else:
                 raise e
         
@@ -220,17 +215,10 @@ def copy_project(project_id, source, destination, env_github_org, branch_name):
     repo = None
 
     if repo_name not in [r.name for r in org.get_repos()]:
-        raise Exception(f"Repo {repo_name} does not exit.... verify the correct Github Organization is set")
+        raise ValueError(f"Repo {repo_name} does not exit.... verify the correct Github Organization is set")
 
-    #   print(f"Repo {repo_name} does not exit.... ")
-    #    print(f"Repo {repo_name} does not exit, creating... ")
-    #    github_org.create_repo(repo_name, private=True)
-    #    repo = github_org.get_repo(repo_name)
-    #    repo.create_file('README.md', 'Init', '# README.md')
-
-    else:
-        repo = org.get_repo(repo_name)
-        print(f"Repo: {repo.name}")
+    repo = org.get_repo(repo_name)
+    print(f"Repo: {repo.name}")
 
     # set up Github deploy key
     try:
@@ -240,7 +228,7 @@ def copy_project(project_id, source, destination, env_github_org, branch_name):
         #     project_name).split(' Looker')[0]
         deploy_key = sdk_destination.git_deploy_key(project_id).split('Looker')[0].strip()
         # ''.join(deploy_key.split(' ')[0:2])  # remove suffix?
-        print(f"deploy_key: {deploy_key}")
+
         # if not already linked to Github repo, link it
 
         # TODO, does not seem to find exiting keys
@@ -303,7 +291,7 @@ def copy_project(project_id, source, destination, env_github_org, branch_name):
                     project_name=project_id
                 ))
 
-            print(f"update_lookml_model: {response}")
+            print(f"update_lookml_model: {model}")
 
     # TODO: Required for the new project
     try:
@@ -334,133 +322,12 @@ def copy_project(project_id, source, destination, env_github_org, branch_name):
         print(f"Error deploying code: {target_branch} to project: {project_id}")
         print(f"{err}")
 
-    # response = sdk_destination.deploy_ref_to_production(project_id, github_production_branch_name)
-    # print(response)
-    # response = sdk_destination.update_git_branch(project_id)
-    # print(response)
-
-    # Using Deployer to move project folders, etc.
-
-    # Create Gazer config until it is removed from Deployer
-    # clients.create_gazer_configfile()
-    #
-    # Test for Deployer
-    # print("Deployer check: version")
-    # cmd = f"ldeploy -v"
-    # print(f"Deployer init check:")
-    # ldeploy_test = subprocess.run(cmd, shell=True)
-    #
-    # # Source folders start from Shared / Production, will search all folders for
-    # # "Production" that has a parent pointing to Shared.  Then look for: <project_name>/source_folder_root (project/staging, etc.)
-    # all_folders_source = sdk_dev.all_folders()
-    # all_folders_destination = sdk_production.all_folders()
-    #
-    # # Find Shared folder ID, which is almost always 1
-    # shared_folder_id_source = [f.id for f in all_folders_source if f.name == "Shared" and f.parent_id == None][0]
-    #
-    # if shared_folder_id_source is None:
-    #     print("Shared folder not found")
-    #     sys.exit(1)
-    #
-    # # Find production_folder_id_source that is direct child of Shared folder
-    # # production_folders = [(f.name, f.id, f.parent_id) for f in all_folders_source if f.name == "Production" and f.parent_id == shared_folder_id_source]
-    # # print( f"production_folders: {production_folders}")
-    # production_folder_id_source = \
-    # [f.id for f in all_folders_source if f.name == "Production" and f.parent_id == shared_folder_id_source][0]
-    #
-    # # Find project_folder_id_source with production_folder_id_source as parent
-    # project_folder_id_source = \
-    # [f.id for f in all_folders_source if f.name == project_name and f.parent_id == production_folder_id_source][0]
-    #
-    # # Todo - check if project_folder_id_source is None
-    #
-    # # find source_folder_id with project_folder_id_source as parent
-    # source_folder_id = [f.id for f in all_folders_source if f.parent_id == project_folder_id_source
-    #                     if f.name == source_folder_root
-    #                     and f.parent_id == project_folder_id_source][0]
-    #
-    # # TODO: Handle missing source_folder_id
-    # if source_folder_id is None:
-    #     print("missing source folder")
-    #     sys.exit(1)
-    #
-    # # Debug
-    # print(f"shared_folder_id_source: {shared_folder_id_source}")
-    # print(f"production_folder_id_source: {production_folder_id_source}")
-    # print(f"project_folder_id_source: {project_folder_id_source}")
-    # print(f"source_folder_id: {source_folder_id}")
-    #
-    # # find destination folder IDs
-    #
-    # shared_folder_id_destination = \
-    # [f.id for f in all_folders_destination if f.name == "Shared" and f.parent_id == None][0]
-    # # TODO check for missing shared_folder_id_destination
-    #
-    # project_folder_id_destination = [f.id for f in all_folders_destination if
-    #                                  f.name == project_name and f.parent_id == shared_folder_id_destination]
-    #
-    # # Create project folder under Shared on Destination if it doesn't exist
-    # if project_folder_id_destination == None:
-    #     print(f"Project Folder not found at destination, creating...")
-    #
-    #     # result = sdk_production.create_folder( body=CreateFolder(name=project_name, parent_id=shared_folder_id_destination))
-    #
-    # # target_folder_id = None
-    # # destination_folder_id = None
-    # # destination_folder_parent = None
-    # # for name, id, parent_id in project_folders_destination:
-    # #     destination_folder_parent = sdk_production.folder(parent_id)
-    # #     if name == destination_folder and destination_folder_parent.name == project_name:
-    # #         destination_folder_id = id
-    #
-    # # print(f"destination_folder_parent.name: {destination_folder_parent.name}")
-    # print(f"project_folder_id_destination: {project_folder_id_destination}")
-    # print(f"shared_folder_id_destination: {shared_folder_id_destination}")
-    #
-    # # for name, id, parent_id in project_folders_dev:
-    # # print ("name: ", name)
-    # # print("id: ", id)
-    # # print("parent_id: ", parent_id)
-    # # folder = sdk_dev.folder(parent_id)
-    # # print(f"folder(parent_id): {folder.name}")
-    #
-    # # gzr_host = os.getenv('LOOKER_PROD_URI')  # LOOKER_PROD_URI | LOOKER_URI
-    # # print(f"Gazer Host: {gzr_host}")
-    # # cmd = f"gzr user me --no-ssl --port=443 --host={gzr_host}"
-    # # print(cmd)
-    # # gzr_test = subprocess.check_call(cmd, shell=True)
-    # # ERROR: Connection Failed.
-    # # Did you specify the --no-ssl option for an ssl secured server?
-    # # You may need to use --port=443 in some cases as well.
-    #
-    # # export folder
-    # cmd = f"ldeploy content export --env Looker --folders {source_folder_id} --local-target ./dev-folder-export"
-    # print(cmd)
-    #
-    # try:
-    #     ldeploy_test = subprocess.check_call(cmd, shell=True)
-    #     print(ldeploy_test)
-    # except Exception as e:
-    #     print(f"ldeploy err: {e}")
-    #
-    # #   File "/usr/local/lib/python3.7/site-packages/looker_deployer/commands/deploy_content.py", line 75, in get_gzr_creds
-    # #   host, port = env_record["base_url"].replace("https://", "").split(":")
-    # #   ValueError: not enough values to unpack (expected 2, got 1)
-    #
-    # # ldeploy content export --env Looker --folders 1 --local-target ./foo/bar/
-    # # ldeploy content import --env LookerProduction --folders ./dev-folder-export --recursive --target-folder {target_folder_name}
-    #
-    # # Close local log file
-    # log.close()
-    #
-    # # Write log to repo?
-
     # Switch back from dev to production mode
     print("Switching back to production mode.")
     response = sdk_destination.update_session(
         body=models.WriteApiSession(workspace_id="production")
     )
-    print(response)
+    # print(response)
 
     # # Set Advance deploy mode off?  This is on by default.
     # # print("Switch off Advance deploy mode\n")
