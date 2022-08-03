@@ -1,15 +1,15 @@
 # Looker Project Utility : lproject (installable version)
 
 ## Usage: 
-### Copy Project
+#### Copy Project
 ```
 lproject copy {project_name}
 ```
-### Copy folder and User defined dashboards
+#### Copy folder and User Defined Dashboards
 ```
 lproject copy --folder_name={name of folder}
 ```
-### Combined
+#### Combined Project and Folder with UD Dashboards
 ```
 lproject copy {project_name} --folder_name={name of folder}
 ```
@@ -20,19 +20,21 @@ It will also use the default GitHub API Token and GitHub Organization as defined
 ### Flags
 ```
 --project_id    : The ID of the project to copy, optinoal if id passed after copy command
+
 --source        : The source Looker instance to copy from as labled in the looker.ini config file.
 --destination   : The destination Looker instance to copy from as labled in the looker.ini config file.
+
+--folder_name   : The folder name to copy.  (It must be unique)
 
 i.e. lproject copy --project_id=customer_progect --source=Development --destination=Production 
 ```
 
 ### Future Enhancements: 
-```
-branch = "main" | "master", unless passed through --branch flag
-Change project ID / Name at destination 
-Chose specifc source repo branch / tag to copy 
-force (overwrite destination project)
-```
+-- branch = "main" | "master", unless passed through --branch flag
+-- Add --folder_id when name is not unique
+-- Chose specifc source repo branch / tag to copy 
+-- Change project ID / Name at destination 
+-- force (overwrite destination project)
 
 ## Installation 
 
@@ -41,27 +43,25 @@ force (overwrite destination project)
 
 ```pip3 install -r requirements.txt```
 
-### Option 2:
+### Option 2: (future)
 Copy the whl file from /dist/LookerProjectUtility*.whl to a local directory.
-
-### 
 
 ```pip3 install -m Looker``` 
 
 
-## Setup
+## Configuration Files 
 ### looker.ini 
 #### Label names are arbitrary but [Source] and [Destination] will be used as defaults if included.
 ```
 [Source]
-base_url=https://
-client_id=r
-client_secret=
+base_url=https:// 
+client_id= 
+client_secret= 
 verify_ssl=True
 
 [Destination]
-base_url=https://
-client_id=
+base_url=https:// 
+client_id= 
 client_secret=
 verify_ssl=True
 ```
@@ -71,9 +71,3 @@ verify_ssl=True
 GITHUB_API_TOKEN= {token}
 GITHUB_ORG= {GitHub Organization}
 ```
-
-### Python Dependencies
-- python-dotenv 
-- PyGithub 
-- looker-sdk 
-
