@@ -132,3 +132,7 @@ dmypy.json
 
 # VSCode 
 .vscode/
+
+# Local Configurations
+looker.ini
+.env
