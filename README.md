@@ -1,4 +1,4 @@
-# Looker Project Utility : lproject (installable version)
+# Looker Project Utility : lproject
 
 ## Usage: 
 #### Copy Project
