@@ -119,7 +119,7 @@ def copy_folder(folder_name: str, folder_id: int, source: str, destination: str)
                     folder_id=destination_folder_id,
                     lookml=db_lookml
                 ))
-            print(f"Copied Dashboard ID: {response.dashboard_id}")
+            print("Dashboard Copied")
         except Exception as e:
             if type(e).__name__ == "SDKError":
                 print("!!! SDK Error: make sure a copy of dashboard: is not in the trash folder at the destination.")
