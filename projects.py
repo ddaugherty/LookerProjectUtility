@@ -127,7 +127,7 @@ def copy_folder(folder_name: str, folder_id: int, source: str, destination: str)
                 raise e
         
 
-def copy_project(project_id, source, destination, env_github_org, branch_name):
+def copy_project(project_id, source, destination, env_github_org, branch_name, project_name):
     print(f"Copying project {project_id}")
     print(f"source: {source}  --> destination: {destination}")
 

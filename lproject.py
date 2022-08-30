@@ -15,7 +15,8 @@ def cli():
 @click.option('--github_org', default=None, help="Git Hub Organization, overrides value defined in .env file.")
 @click.option('--branch', default=None, help="Target branch to copy, otherwise uses active branch.")
 @click.option('--folder_name', default=None, help="Name of folder to copy.")
-def copy(id, source, destination, github_org, branch, folder_name):
+@click.option('--project_name', default=None, help="Rename project at destination.")
+def copy(id, source, destination, github_org, branch, folder_name, project_name):
     if id is None and folder_name is None:
         click.echo("Project ID or Folder required for Copy operation.")
         return
@@ -28,9 +29,10 @@ def copy(id, source, destination, github_org, branch, folder_name):
     env_github_org = github_org or None
     branch_name = branch or None
     folder_name = folder_name or None
+    project_name = project_name or None
 
     if project_id:
-        copy_project(project_id, ini_source, ini_destination, env_github_org, branch_name)
+        copy_project(project_id, ini_source, ini_destination, env_github_org, branch_name, project_name)
 
     if folder_name:
         copy_folder(folder_name, None, ini_source, ini_destination)
