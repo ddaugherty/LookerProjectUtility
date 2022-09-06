@@ -68,6 +68,23 @@ verify_ssl=True
 
 ### .env
 ```
+# Swich to set current Repo brand
+REPO_BRAND=     # github | gitlab  (optional if github)
+
+# GitHub
 GITHUB_API_TOKEN= {token}
 GITHUB_ORG= {GitHub Organization}
+
+# GitLab 
+GITLAB_API_TOKEN=
+
+
 ```
+
+### Dependencies (partial)
+python-gitlab==3.9.0
+https://python-gitlab.readthedocs.io/en/stable/gl_objects/deploy_keys.html
+
+PyGithub==1.55
+https://github.com/PyGithub/PyGithub
+
