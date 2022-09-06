@@ -4,6 +4,7 @@ import looker_sdk
 from looker_sdk.sdk.api40.models import WriteApiSession
 from dotenv import load_dotenv
 from github import Github
+from gitlab import Gitlab
 
 
 def get_github_credentials():
@@ -17,6 +18,7 @@ def get_github_credentials():
     except KeyError as e:
         raise KeyError("clients.py: environment variable not set, see documentation re: .env file") from e
 
+
 def get_gitlab_credentials():
     # Load credentials from .env file
     
@@ -27,6 +29,22 @@ def get_gitlab_credentials():
         return os.environ['GITLAB_API_TOKEN']
     except KeyError as e:
         raise KeyError("clients.py: environment variable not set, see documentation re: .env file") from e
+
+
+
+def get_github_client():
+    repo_credentials = get_github_credentials()
+    return Github(
+        repo_credentials.strip(),
+        retry=Retry(total=10, status_forcelist=(500, 502, 504), backoff_factor=0.3))
+
+
+def get_gitlab_client():
+    repo_credentials = get_gitlab_credentials()
+    # gitlab.Gitlab(private_token='JVNSESs8EwWRx5yDxM5q')
+    return Gitlab(
+        private_token=repo_credentials.strip()
+)
 
 
 def get_repo_credentials():
@@ -43,11 +61,14 @@ def get_repo_credentials():
         get_gitlab_credentials()
 
 
-def get_github_client():
-    github_credentials = get_github_credentials()
-    return Github(
-        github_credentials.strip(),
-        retry=Retry(total=10, status_forcelist=(500, 502, 504), backoff_factor=0.3))
+def get_repo_client():
+    load_dotenv()
+    if not os.environ['REPO_BRAND'] or os.environ['REPO_BRAND'] == 'github':
+        return get_github_client()
+        
+    if os.environ['REPO_BRAND'] == 'gitlab':
+        return get_gitlab_client()
+
 
 
 def get_looker_sdk(section='looker') -> any:

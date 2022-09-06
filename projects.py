@@ -173,7 +173,8 @@ def copy_project(project_id, source, destination, env_github_org, branch_name, p
     # source_project_repo_url = \
     github_repo_url = source_project.git_remote_url
     github_production_branch_name = source_project.git_production_branch_name
-    github_client = clients.get_github_client()
+    # github_client = clients.get_github_client()
+    gitrepo_client = clients.get_repo_client()
 
     active_git_branch_dev = sdk_source.git_branch(project_id).name
     print(f"Active Git Branch: {active_git_branch_dev}")
@@ -182,11 +183,15 @@ def copy_project(project_id, source, destination, env_github_org, branch_name, p
     target_branch = branch_name or active_git_branch_dev
     print(f"Target Branch: {target_branch}")
 
-    try:
-        org = github_client.get_organization(env_github_org or os.environ['GITHUB_ORG'])
-    except Exception as e:
-        print(f"Issue using Github Organization: {env_github_org or os.environ['GITHUB_ORG']}")
-        sys.exit(1)
+    if not os.environ['REPO_BRAND'] or os.environ['REPO_BRAND'] == 'github':
+        try:
+            org = gitrepo_client.get_organization(env_github_org or os.environ['GITHUB_ORG'])
+        except Exception as e:
+            print(f"Issue using Github Organization: {env_github_org or os.environ['GITHUB_ORG']}")
+            sys.exit(1)
+    else:
+        # TODO (Maybe forgo Org for GitLab?)
+        org = None  
 
     print(f"GitHub Organization: {org}")
     github_service_name = source_project.git_service_name
@@ -212,13 +217,33 @@ def copy_project(project_id, source, destination, env_github_org, branch_name, p
     # TODO: Should always be here, error if not, do not create
     print(f"Checking repo: {repo_name}")
 
-    repo = None
+    
+    repo = None  # GitHub
+    project = None  # GitLab
 
-    if repo_name not in [r.name for r in org.get_repos()]:
-        raise ValueError(f"Repo {repo_name} does not exit.... verify the correct Github Organization is set")
+    # Default to Github unless GitLab is specified
+    if not os.environ['REPO_BRAND'] or os.environ['REPO_BRAND'] == 'github':
+        if repo_name not in [r.name for r in org.get_repos()]:
+            raise ValueError(f"Repo {repo_name} does not exit.... verify the correct Github Organization is set")
+    else: 
+        projects = gitrepo_client.projects.list(iterator=True, search=repo_name)
 
-    repo = org.get_repo(repo_name)
-    print(f"Repo: {repo.name}")
+        # Search on exact name should return exactly one hit
+        if projects.total > 1 or projects.total == 0:
+            raise ValueError(f"Repo {repo_name} does not exit.... verify the correct GitLab Organization is set")
+        
+        for project in projects:  
+            # list comprehension is not working as not true iterator
+            # expect only 1 by this point
+            if project.name.lower() != repo_name.lower():
+                raise ValueError(f"Repo {repo_name} does not exit.... verify the correct GitLab Organization is set")
+
+    # Todo 
+    if not os.environ['REPO_BRAND'] or os.environ['REPO_BRAND'] == 'github':
+        repo = org.get_repo(repo_name)
+        print(f"Repo: {repo.name}")
+    else: 
+        print(f"GitLab Project {project.name}") 
 
     # set up Github deploy key
     try:
@@ -231,19 +256,40 @@ def copy_project(project_id, source, destination, env_github_org, branch_name, p
 
         # if not already linked to Github repo, link it
 
+        if not os.environ['REPO_BRAND'] or os.environ['REPO_BRAND'] == 'github':
         # TODO, does not seem to find exiting keys
-        if deploy_key not in [k.key for k in repo.get_keys()]:
-            repo.create_key(key=deploy_key, title='Looker', read_only=False)
+            if deploy_key not in [k.key for k in repo.get_keys()]:
+                repo.create_key(key=deploy_key, title='Looker', read_only=False)
+        else:
+            keys = project.keys.list()
+            key_exists = False
+            for key in keys:  
+                if deploy_key == key.key:
+                    print(f"Deploy key already exists in GitLab project {project.name}")
+                    key_exists = True
+                    break
+            
+            if not key_exists:
+                # Create Key GitLab 
+                # repo.create_key(key=deploy_key, title='Looker', read_only=False)
+                pass
+            
     except Exception as e:
         # this might fail if there is no key in Looker yet
         # or if the key has already been linked to a different repo
 
         # create a new deploy key in Looker and link to Github
         print("Deploy key not found, creating new one.")
-        deploy_key = sdk_destination.create_git_deploy_key(project_id)
-        # print(f"deploy Key: {deploy_key}")
-        repo.create_key(key=deploy_key, title='Looker', read_only=False)
+        if not os.environ['REPO_BRAND'] or os.environ['REPO_BRAND'] == 'github':
+            deploy_key = sdk_destination.create_git_deploy_key(project_id)
+            # print(f"deploy Key: {deploy_key}")
+            repo.create_key(key=deploy_key, title='Looker', read_only=False)
+        else:
+            deploy_key = sdk_destination.create_git_deploy_key(project_id)
+            key = project.keys.create({'title': 'Looker', 'key': deploy_key})
+            
 
+            
     # Update project with Repo URL
     response = sdk_destination.update_project(
         project_id,
