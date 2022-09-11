@@ -3,15 +3,15 @@
 ## Usage: 
 #### Copy Project
 ```
-lproject copy {project_name}
+python3 lproject copy {project_name}
 ```
 #### Copy folder and User Defined Dashboards
 ```
-lproject copy --folder_name={name of folder}
+python3 lproject copy --folder_name={name of folder}
 ```
 #### Combined Project and Folder with UD Dashboards
 ```
-lproject copy {project_name} --folder_name={name of folder}
+python3 lproject copy {project_name} --folder_name={name of folder}
 ```
 
 This is use a source and destination instance as defined by [Source] and [Destination] in the looker.ini config file by default. 
