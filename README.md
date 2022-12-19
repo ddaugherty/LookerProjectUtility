@@ -1,5 +1,6 @@
 # Looker Project Utility : lproject
 
+Utility to copy Looker projects or folders from one instance to another that the included dashboards.  
 ## Usage: 
 #### Copy Project
 ```
@@ -14,7 +15,7 @@ python3 lproject copy --folder_name={name of folder}
 python3 lproject copy {project_name} --folder_name={name of folder}
 ```
 
-This is use a source and destination instance as defined by [Source] and [Destination] in the looker.ini config file by default. 
+This is a source and destination instance as defined by [Source] and [Destination] in the looker.ini config file by default. 
 It will also use the default GitHub API Token and GitHub Organization as defined by GITHUB_API_TOKEN and GITHUB_ORG in the .env file.
 
 ### Flags
