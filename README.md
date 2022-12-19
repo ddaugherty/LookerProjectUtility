@@ -1,6 +1,7 @@
 # Looker Project Utility : lproject
 
-Utility to copy Looker projects or folders from one instance to another that the included dashboards.  
+Utility to copy Looker projects or folders from one instance to another.
+
 ## Usage: 
 #### Copy Project
 ```
