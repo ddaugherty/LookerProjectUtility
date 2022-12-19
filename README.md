@@ -19,20 +19,20 @@ It will also use the default GitHub API Token and GitHub Organization as defined
 
 ### Flags
 ```
---project_id    : The ID of the project to copy, optinoal if id passed after copy command
+--project_id    : The ID of the project to copy, optional if id passed after copy command
 
---source        : The source Looker instance to copy from as labled in the looker.ini config file.
---destination   : The destination Looker instance to copy from as labled in the looker.ini config file.
+--source        : The source Looker instance to copy from as labeled in the looker.ini config file.
+--destination   : The destination Looker instance to copy from as labeled in the looker.ini config file.
 
 --folder_name   : The folder name to copy.  (It must be unique)
 
-i.e. lproject copy --project_id=customer_progect --source=Development --destination=Production 
+i.e. lproject copy --project_id=customer_project --source=Development --destination=Production 
 ```
 
 ### Future Enhancements: 
 -- branch = "main" | "master", unless passed through --branch flag
 -- Add --folder_id when name is not unique
--- Chose specifc source repo branch / tag to copy 
+-- Chose specific source repo branch / tag to copy 
 -- Change project ID / Name at destination 
 -- force (overwrite destination project)
 
@@ -68,7 +68,7 @@ verify_ssl=True
 
 ### .env
 ```
-# Swich to set current Repo brand
+# Switch to set current Repo brand
 REPO_BRAND=     # github | gitlab  (optional if github)
 
 # GitHub
