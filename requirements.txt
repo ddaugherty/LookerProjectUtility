@@ -1,4 +1,4 @@
-click==7.1.2
+click==8.3.1
 urllib3==2.6.3
 looker_sdk==22.10.0
 PyGithub==1.55
